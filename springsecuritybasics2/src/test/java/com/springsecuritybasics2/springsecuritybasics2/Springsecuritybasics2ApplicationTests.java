@@ -1,4 +1,4 @@
-package com.securitybasics2.springsecuritybasics;
+package com.springsecuritybasics2.springsecuritybasics2;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
