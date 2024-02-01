@@ -1,4 +1,4 @@
-package com.securitybasics2.springsecuritybasics.sonfig;
+package com.securitybasics2.springsecuritybasics.config;
 
 import java.util.ArrayList;
 import java.util.List;

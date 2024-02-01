@@ -1,4 +1,4 @@
-package com.securitybasics2.springsecuritybasics.sonfig;
+package com.securitybasics2.springsecuritybasics.config;
 
 import javax.sql.DataSource;
 
@@ -34,7 +34,7 @@ public class ProjectSecurityConfig {
 //				(request) -> request
 //				.anyRequest().permitAll());
 				
-		http.csrf(csrf-> csrf.disable()).authorizeHttpRequests(
+		http.csrf(csrf-> csrf.disable()).cors(cors -> cors.disable()).authorizeHttpRequests(
 				(requests)-> requests
 				.requestMatchers("/accounts/**","/balances/**","/loans/**","/cards/**").authenticated()
 				.requestMatchers("/notices/**","/contacts/**","/register/**").permitAll())
