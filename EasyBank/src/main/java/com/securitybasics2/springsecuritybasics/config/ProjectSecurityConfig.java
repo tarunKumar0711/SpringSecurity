@@ -1,5 +1,7 @@
 package com.securitybasics2.springsecuritybasics.config;
 
+import java.util.List;
+
 import javax.sql.DataSource;
 
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
@@ -10,11 +12,17 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.SneakyThrows;
 @Configuration
@@ -24,7 +32,7 @@ public class ProjectSecurityConfig {
 	@Bean
 	@SneakyThrows
 	@Order(SecurityProperties.BASIC_AUTH_ORDER)
-	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {	
+	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) {	
 		
 //		http.authorizeHttpRequests(
 //				(request) -> request
@@ -33,17 +41,38 @@ public class ProjectSecurityConfig {
 //		http.authorizeHttpRequests(
 //				(request) -> request
 //				.anyRequest().permitAll());
-				
-		http.csrf(csrf-> csrf.disable()).cors(cors -> cors.disable()).authorizeHttpRequests(
+		CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+		requestHandler.setCsrfRequestAttributeName("_csrf");
+		
+		http.authorizeHttpRequests(
 				(requests)-> requests
 				.requestMatchers("/accounts/**","/balances/**","/loans/**","/cards/**").authenticated()
 				.requestMatchers("/notices/**","/contacts/**","/register/**","/v3/api-docs","/v3/api-docs/**","/swagger-ui.html","/swagger-ui/**").permitAll())
 				.formLogin(Customizer.withDefaults())
 				.httpBasic(Customizer.withDefaults());
-				
+		
+		http.cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()));
+		http.csrf( csrf -> csrf.csrfTokenRequestHandler(requestHandler)
+				.ignoringRequestMatchers("/contacts/**","/register/**","/v3/api-docs","/v3/api-docs/**","/swagger-ui.html","/swagger-ui/**")
+				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
+		
 		return http.build();
 	}
 	
+	@Bean
+	public CorsConfigurationSource corsConfigurationSource() {
+		CorsConfiguration configuration = new CorsConfiguration();
+		configuration.setAllowedOrigins(List.of("*"));
+		configuration.setAllowedMethods(List.of("GET","POST","PUT","DELETE"));
+		configuration.setAllowCredentials(true);
+		configuration.setAllowedHeaders(List.of("Authorization","Cache-Control","Content-Type"));
+		configuration.setExposedHeaders(List.of("Authorization"));
+		
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", configuration);
+		return source;
+	}
+
 //	@Bean
 //	public InMemoryUserDetailsManager userDetailsService() {
 //		
@@ -86,7 +115,7 @@ public class ProjectSecurityConfig {
 	
 	@Bean
 	public PasswordEncoder passwordEncoder() {
-		return NoOpPasswordEncoder.getInstance();
+		return new BCryptPasswordEncoder();
 	}
 	
 	}
