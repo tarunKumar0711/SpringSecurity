@@ -1,0 +1,31 @@
+version: '3.8'  # Docker Compose file version
+services:
+  mysql:
+    image: mysql
+    restart: always
+    environment:
+            MYSQL_DATABASE: docker_test
+            MYSQL_ROOT_PASSWORD: mypass
+    ports:
+            - 3306:3306
+    networks:
+       - easybank-network  # Connect to the same network as web
+             # Services/containers configuration
+  web:          # Service for the web server
+    image: easybank  # Docker image to use
+    restart: on-failure
+    ports:
+      - "8080:8080"  # Port mapping (host:container)
+    build:
+      context: .
+    networks:
+      - easybank-network  # Connect to a specified network
+    depends_on:
+    - mysql 
+
+networks:       # Define networks
+  easybank-network:
+    driver: bridge  # Specify network driver
+
+volumes:         # Define volumes
+  pgdata:

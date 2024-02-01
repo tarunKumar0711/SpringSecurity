@@ -37,7 +37,7 @@ public class ProjectSecurityConfig {
 		http.csrf(csrf-> csrf.disable()).cors(cors -> cors.disable()).authorizeHttpRequests(
 				(requests)-> requests
 				.requestMatchers("/accounts/**","/balances/**","/loans/**","/cards/**").authenticated()
-				.requestMatchers("/notices/**","/contacts/**","/register/**").permitAll())
+				.requestMatchers("/notices/**","/contacts/**","/register/**","/v3/api-docs","/v3/api-docs/**","/swagger-ui.html","/swagger-ui/**").permitAll())
 				.formLogin(Customizer.withDefaults())
 				.httpBasic(Customizer.withDefaults());
 				
