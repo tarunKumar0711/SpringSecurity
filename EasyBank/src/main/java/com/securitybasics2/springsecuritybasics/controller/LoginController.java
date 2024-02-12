@@ -1,3 +1,4 @@
+
 package com.securitybasics2.springsecuritybasics.controller;
 
 import java.util.List;
@@ -53,7 +54,7 @@ public class LoginController {
 	
 	@GetMapping("/login")
 	public ResponseEntity<?> getUserDetailsAfterLogin(Authentication authentication){
-		List<Customer> customers = customerRepository.findByEmail(authentication.getName());
+		Customer customers = customerRepository.findByEmail(authentication.getName());
 		if( Objects.nonNull(customers)) {
 			return new ResponseEntity<>(customers,HttpStatus.OK);
 		}

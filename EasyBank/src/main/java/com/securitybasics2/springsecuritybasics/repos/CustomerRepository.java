@@ -10,6 +10,6 @@ import com.securitybasics2.springsecuritybasics.entity.Customer;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Integer>{ 
 	
-	List<Customer> findByEmail(String email);
+	Customer findByEmail(String email);
 
 }

@@ -2,6 +2,7 @@ package com.securitybasics2.springsecuritybasics.config;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
@@ -29,15 +30,15 @@ public class EasyBankUserDetails implements UserDetailsService{
 	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 		String userName, password= null;
 		List<GrantedAuthority> authorities =null;
-		List<Customer> customer = customerRepository.findByEmail(username);
-		if(customer.size()==0) {
+		Customer customer = customerRepository.findByEmail(username);
+		if(Objects.nonNull(customer)) {
 			throw new UsernameNotFoundException("User details not found for the user:"+ username);
 		}
 		else {
-			userName =customer.get(0).getEmail();
-			password = customer.get(0).getPwd();
+			userName =customer.getEmail();
+			password = customer.getPwd();
 			authorities= new ArrayList<>();
-			authorities.add(new SimpleGrantedAuthority(customer.get(0).getRole()));
+			authorities.add(new SimpleGrantedAuthority(customer.getRole()));
 		}
 		return new User(userName, password, authorities);
 	}

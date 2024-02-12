@@ -10,9 +10,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
@@ -23,6 +25,8 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import com.securitybasics2.springsecuritybasics.filter.CsrfCookieFilter;
 
 import lombok.SneakyThrows;
 @Configuration
@@ -43,18 +47,27 @@ public class ProjectSecurityConfig {
 //				.anyRequest().permitAll());
 		CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
 		requestHandler.setCsrfRequestAttributeName("_csrf");
-		
+//		http.securityContext().requireExplicitSave(false)
+//		.and().sessionManagement( session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS));
 		http.authorizeHttpRequests(
 				(requests)-> requests
-				.requestMatchers("/accounts/**","/balances/**","/loans/**","/cards/**").authenticated()
-				.requestMatchers("/notices/**","/contacts/**","/register/**","/v3/api-docs","/v3/api-docs/**","/swagger-ui.html","/swagger-ui/**").permitAll())
+//				.requestMatchers("/accounts/**","/balances/**","/loans/**","/cards/**").authenticated()
+				.requestMatchers("/v3/api-docs","/v3/api-docs/**","/swagger-ui.html","/swagger-ui/**").permitAll()
+				.requestMatchers("/accounts/**").hasRole("USER")
+				.requestMatchers("/balances/**").hasAnyRole("USER","ADMIN")
+				.requestMatchers("/loans/**").hasRole("USER")
+				.requestMatchers("/cards/**").authenticated()
+				.requestMatchers("/notices/**","/contacts/**","/register/**").permitAll()
+				)
 				.formLogin(Customizer.withDefaults())
 				.httpBasic(Customizer.withDefaults());
 		
 		http.cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()));
 		http.csrf( csrf -> csrf.csrfTokenRequestHandler(requestHandler)
 				.ignoringRequestMatchers("/contacts/**","/register/**","/v3/api-docs","/v3/api-docs/**","/swagger-ui.html","/swagger-ui/**")
-				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
+				.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+		.addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class);
+		//.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS));
 		
 		return http.build();
 	}
@@ -115,7 +128,7 @@ public class ProjectSecurityConfig {
 	
 	@Bean
 	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
+		return NoOpPasswordEncoder.getInstance();
 	}
 	
 	}
