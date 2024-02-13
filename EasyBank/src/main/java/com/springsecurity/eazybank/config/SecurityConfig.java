@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -38,6 +39,10 @@ public class SecurityConfig {
 
         CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
         requestHandler.setCsrfRequestAttributeName("_csrf");
+
+//		http.securityContext().requireExplicitSave(false)
+//		.and().sessionManagement( session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS));
+//        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.authorizeHttpRequests(
                         requests -> requests
                                 /*.requestMatchers("/myAccount").hasAuthority("VIEWACCOUNT")
@@ -49,17 +54,18 @@ public class SecurityConfig {
                                 .requestMatchers("/myLoans").hasRole("USER")
                                 .requestMatchers("/myCards").authenticated()
                                 .requestMatchers("/user").authenticated()
-                                .requestMatchers("/notices", "/contact", "/register").permitAll())
-                .formLogin(Customizer.withDefaults())
-                .httpBasic(Customizer.withDefaults());
+                                .requestMatchers("/notices", "/contact", "/register").permitAll()
+                                .requestMatchers("/v3/api-docs","/v3/api-docs/**","/swagger-ui.html","/swagger-ui/**").permitAll());
+                // .formLogin(Customizer.withDefaults())
+                // .httpBasic(Customizer.withDefaults());
         http.cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()));
         http.csrf(csrf -> csrf.csrfTokenRequestHandler(requestHandler)
                         .ignoringRequestMatchers("/contact", "/register")
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
-        		.addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
-                .addFilterBefore(new RequestValidationBeforeFilter(), BasicAuthenticationFilter.class);
-//                .addFilterAfter(new JWTTokenGeneratorFilter(), BasicAuthenticationFilter.class)
-  //              .addFilterBefore(new JWTTokenValidationFilter(), BasicAuthenticationFilter.class);
+//        		.addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
+//                .addFilterBefore(new RequestValidationBeforeFilter(), BasicAuthenticationFilter.class);
+                .addFilterAfter(new JWTTokenGeneratorFilter(), BasicAuthenticationFilter.class)
+                .addFilterBefore(new JWTTokenValidationFilter(), BasicAuthenticationFilter.class);
 
         return http.build();
     }
