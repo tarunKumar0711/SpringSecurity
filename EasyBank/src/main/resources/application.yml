@@ -10,6 +10,11 @@ spring:
     username: root
     password: Software@123
     driver-class-name: com.mysql.cj.jdbc.Driver
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8180/realms/eazybankdev/protocol/openid-connect/certs
 
   jpa:
     show-sql: true
@@ -20,3 +25,11 @@ spring:
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
+
+    
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:8180/realms/eazybankdev/protocol/openid-connect/certs

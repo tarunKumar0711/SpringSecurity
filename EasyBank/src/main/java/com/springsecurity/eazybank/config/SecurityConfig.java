@@ -13,6 +13,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -36,7 +37,10 @@ public class SecurityConfig {
     @Bean
     @SneakyThrows
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) {
-
+    	
+    	JwtAuthenticationConverter jwtAuthenticationConverter = new JwtAuthenticationConverter();
+    	jwtAuthenticationConverter.setJwtGrantedAuthoritiesConverter(new KeyCloakRoleConverter());
+    	
         CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
         requestHandler.setCsrfRequestAttributeName("_csrf");
 
@@ -55,25 +59,26 @@ public class SecurityConfig {
                                 .requestMatchers("/myCards").authenticated()
                                 .requestMatchers("/user").authenticated()
                                 .requestMatchers("/notices", "/contact", "/register").permitAll()
-                                .requestMatchers("/v3/api-docs","/v3/api-docs/**","/swagger-ui.html","/swagger-ui/**").permitAll());
+                                .requestMatchers("/v3/api-docs","/v3/api-docs/**","/swagger-ui.html","/swagger-ui/**").permitAll())
+        						.oauth2ResourceServer(o -> o.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)));
                 // .formLogin(Customizer.withDefaults())
                 // .httpBasic(Customizer.withDefaults());
         http.cors(httpSecurityCorsConfigurer -> httpSecurityCorsConfigurer.configurationSource(corsConfigurationSource()));
         http.csrf(csrf -> csrf.csrfTokenRequestHandler(requestHandler)
                         .ignoringRequestMatchers("/contact", "/register")
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()));
 //        		.addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
 //                .addFilterBefore(new RequestValidationBeforeFilter(), BasicAuthenticationFilter.class);
-                .addFilterAfter(new JWTTokenGeneratorFilter(), BasicAuthenticationFilter.class)
-                .addFilterBefore(new JWTTokenValidationFilter(), BasicAuthenticationFilter.class);
+//                .addFilterAfter(new JWTTokenGeneratorFilter(), BasicAuthenticationFilter.class)
+//                .addFilterBefore(new JWTTokenValidationFilter(), BasicAuthenticationFilter.class);
 
         return http.build();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+//    @Bean
+//    public PasswordEncoder passwordEncoder() {
+//        return new BCryptPasswordEncoder();
+//    }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
